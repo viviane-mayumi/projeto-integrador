@@ -51,4 +51,10 @@ public class UsuarioService implements UserDetailsService {
 		List<UsuarioEntity> usuariosEntity = this.repository.findAll();
 		return usuarioMapper.listUsuarioEntityToListUsuarioVO(usuariosEntity);
 	}
+	
+	public UsuarioVO insert(final UsuarioVO usuarioVO) {
+		UsuarioEntity usuarioAInserir = usuarioMapper.UsuarioVOToUsuarioEntity(usuarioVO);
+		UsuarioEntity usuarioInserido = this.repository.save(usuarioAInserir);
+		return usuarioMapper.usuarioEntityToUsuarioVO(usuarioInserido);
+	}
 }

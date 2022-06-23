@@ -28,22 +28,16 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 	// trabalhado no nosso resolverToken
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
-		
-		try {
-			String token = jwtProvider.resolveToken(request);
-			if (token != null && jwtProvider.validateToken(token)) {
-				Authentication auth = jwtProvider.getAuthentication(token);
-				if (auth != null) {
-					SecurityContextHolder.getContext().setAuthentication(auth);
-				}
+		throws ServletException, IOException {
+	
+		String token = jwtProvider.resolveToken(request);
+		if (token != null && jwtProvider.validateToken(token)) {
+			Authentication auth = jwtProvider.getAuthentication(token);
+			if (auth != null) {
+				SecurityContextHolder.getContext().setAuthentication(auth);
 			}
-		} catch(InvalidJwtAuthenticationException e) {
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Token expirado ou inválido");
-		} catch(Exception e) {
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Erro na validacao do token jwt");
 		}
+		
 		filterChain.doFilter(request, response);
 	}
-
 }

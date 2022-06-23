@@ -3,16 +3,23 @@ package br.com.serasa.pi.controller;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+import java.net.URI;
 import java.util.List;
+
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.com.serasa.pi.common.UsuarioVO;
 import br.com.serasa.pi.service.UsuarioService;
@@ -26,6 +33,9 @@ public class UsuarioController {
 
 	@Autowired
 	private UsuarioService usuarioService;
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
 	@CrossOrigin("localhost:8080")
 	@Operation(summary = "Listar todas os Usuarios")
@@ -44,5 +54,17 @@ public class UsuarioController {
 		UsuarioVO usuarioVO = usuarioService.obterUsuarioPorId(idUsuario);
 		usuarioVO.add(linkTo(methodOn(UsuarioController.class).findById(idUsuario)).withSelfRel());
 		return ResponseEntity.ok().body(usuarioVO);
+	}
+	
+	@Operation(summary="Inserir dados de Usuário")
+	@PostMapping(consumes = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE }, 
+		         produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
+	public ResponseEntity<UsuarioVO> insert(@Valid @RequestBody UsuarioVO usuarioVO) {
+		usuarioVO.setPassword(passwordEncoder.encode(usuarioVO.getPassword()));
+		UsuarioVO usuarioInseridoVO = usuarioService.insert(usuarioVO);
+		usuarioInseridoVO.add(linkTo(methodOn(UsuarioController.class).findById(usuarioInseridoVO.getId())).withSelfRel());
+		URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(usuarioInseridoVO.getId()).toUri();
+		return ResponseEntity.created(uri).body(usuarioInseridoVO);
 	}
 }
